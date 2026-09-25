@@ -7,7 +7,7 @@
     <title>SonyLiv Live Sports | Aryan Streams</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Hls.js for adaptive live playback -->
+    <!-- Hls.js -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,7 +19,7 @@
                 radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 30rem),
                 #070a14;
             color: #f8fafc;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
         }
 
         .glass-nav {
@@ -37,7 +37,7 @@
         }
 
         .match-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
             border-color: rgba(255, 44, 85, 0.45);
             box-shadow: 0 20px 45px rgba(255, 44, 85, 0.18);
         }
@@ -49,21 +49,13 @@
 
         body.modal-open { overflow: hidden; }
 
-        .player-wrapper {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-        }
-
         video {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            background: #000;
+            background-color: #000;
+            outline: none;
+            border: none;
         }
     </style>
 </head>
@@ -80,97 +72,105 @@
                         <h1 class="text-xl sm:text-2xl font-black tracking-wide text-white uppercase">
                             Aryan <span class="bg-gradient-to-r from-rose-500 to-amber-400 bg-clip-text text-transparent">SonyLiv Hub</span>
                         </h1>
-                        <p class="text-xs text-slate-400 font-medium">Auto-Updating Sony Sports & Live Events</p>
+                        <p class="text-xs text-slate-400 font-medium">Auto-Updating Live Sports Hub</p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-200 bg-slate-900/80 px-3.5 py-2 rounded-xl border border-slate-700/60 shadow-inner">
                         <span class="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping"></span>
-                        <span id="live-count">0</span> LIVE MATCHES
+                        <span id="live-count">0</span> LIVE
                     </div>
-                    <button onclick="loadData()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                    <button onclick="loadData(true)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
                         <i class="fa-solid fa-rotate"></i> Refresh
                     </button>
+                    <a href="https://t.me/aryanstreams" target="_blank" rel="noreferrer" class="px-3 py-2 rounded-xl bg-[#2AABEE]/20 hover:bg-[#2AABEE]/30 text-[#2AABEE] text-xs font-bold transition flex items-center gap-1.5 border border-[#2AABEE]/30">
+                        <i class="fa-brands fa-telegram"></i> Telegram
+                    </a>
                 </div>
             </div>
         </nav>
 
         <main class="mx-auto max-w-7xl px-4 sm:px-6 mt-6 sm:mt-8">
             <!-- Search & Filters -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 sm:mb-8">
+            <div class="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center mb-6">
+                <!-- Category Tabs -->
                 <div id="filters" class="flex flex-wrap gap-2">
-                    <button class="filter-btn bg-rose-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg shadow-rose-950/30">ALL</button>
+                    <button class="filter-btn bg-rose-600 text-white shadow-lg shadow-rose-950/30 px-4 py-1.5 rounded-full text-xs font-bold transition">ALL</button>
                 </div>
-                <div class="w-full md:w-72 relative">
+
+                <!-- Search Input -->
+                <div class="relative min-w-[240px]">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="search-input" placeholder="Search team, match or event..." oninput="onSearch(this.value)"
-                           class="w-full bg-slate-900/90 border border-slate-700/70 text-slate-200 text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-rose-500 transition">
+                    <input type="text" id="search-input" placeholder="Search match, tournament, team..." 
+                           class="w-full bg-slate-900/80 border border-slate-700/70 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-rose-500 transition"
+                           oninput="onSearch(this.value)">
                 </div>
             </div>
 
             <!-- Loader -->
-            <div id="loader" class="flex flex-col items-center justify-center py-28">
-                <div class="w-12 h-12 border-4 border-slate-800 border-t-rose-500 rounded-full animate-spin mb-4"></div>
+            <div id="loader" class="flex flex-col items-center justify-center py-24">
+                <div class="w-12 h-12 border-4 border-slate-700 border-t-rose-500 rounded-full animate-spin mb-4"></div>
                 <p class="text-slate-400 text-sm font-medium tracking-wide">Syncing SonyLiv live matches...</p>
             </div>
 
-            <!-- Live Matches Section -->
-            <div id="live-section" class="mb-12 hidden">
-                <div class="flex items-center justify-between mb-5">
-                    <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
-                        <span class="w-3 h-3 bg-rose-500 rounded-full animate-pulse"></span>
-                        Live Now
+            <!-- Live Matches Grid -->
+            <div id="live-section" class="mb-10 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-black text-white flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping"></span>
+                        Live Matches
                     </h2>
-                    <span class="text-xs text-rose-400 font-bold tracking-wider uppercase">Real-Time Streams</span>
                 </div>
                 <div id="live-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
             </div>
 
-            <!-- Upcoming Matches Section -->
+            <!-- Upcoming Matches Grid -->
             <div id="upcoming-section" class="hidden">
-                <div class="flex items-center justify-between mb-5">
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-300 flex items-center gap-2.5">
-                        <span class="w-3 h-3 bg-slate-600 rounded-full"></span>
-                        Upcoming Events
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-black text-slate-300 flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 bg-slate-500 rounded-full"></span>
+                        Upcoming Schedule
                     </h2>
-                    <span class="text-xs text-slate-400 font-bold uppercase">Scheduled</span>
                 </div>
                 <div id="upcoming-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
             </div>
         </main>
 
-        <!-- Video Player Modal -->
-        <div id="player-modal" class="fixed inset-0 bg-black/95 hidden z-50 flex-col items-center justify-center p-3 sm:p-6 backdrop-blur-md">
-            <div class="w-full max-w-5xl flex flex-col gap-3">
-                <!-- Top Player Header -->
-                <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/90 px-4 py-3">
-                    <div class="min-w-0 flex items-center gap-3">
-                        <span class="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping"></span>
-                        <div class="min-w-0">
-                            <h3 id="modal-title" class="text-sm sm:text-base font-bold text-white truncate">Match Player</h3>
-                            <p id="modal-sub" class="text-[11px] text-slate-400 truncate">SonyLiv Official Stream</p>
+        <!-- Player Modal -->
+        <div id="player-modal" class="fixed inset-0 bg-black/95 hidden z-50 flex-col items-center justify-center p-2 sm:p-5 backdrop-blur-md">
+            <div class="w-full max-w-5xl relative flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/80 px-3 sm:px-4 py-3">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 text-white font-bold text-xs bg-rose-600 px-2 py-0.5 rounded">
+                                <span class="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>LIVE
+                            </span>
+                            <span id="modal-sub" class="text-xs text-slate-400 truncate"></span>
                         </div>
+                        <h2 id="modal-title" class="mt-1 text-base sm:text-lg font-semibold text-slate-100 truncate"></h2>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button id="btn-share" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" id="btn-share" class="border border-indigo-700 hover:border-indigo-500 text-indigo-400 hover:text-indigo-200 rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5 font-medium text-xs bg-indigo-950/40">
                             <i class="fa-solid fa-share-nodes"></i> Share
                         </button>
-                        <button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white transition grid place-items-center text-sm font-bold">
-                            <i class="fa-solid fa-xmark"></i>
+                        <a id="btn-fullscreen-page" href="#" target="_blank" class="border border-slate-700 hover:border-rose-500 text-slate-300 hover:text-rose-400 rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5 font-medium text-xs bg-slate-900/60">
+                            <i class="fa-solid fa-up-right-from-square"></i> Fullpage
+                        </a>
+                        <button type="button" onclick="closeModal()" class="border border-slate-700 hover:border-white hover:text-white text-slate-300 rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5 font-medium text-xs bg-slate-900/60">
+                            <i class="fa-solid fa-xmark"></i> Close
                         </button>
                     </div>
                 </div>
 
-                <!-- Video Frame -->
-                <div class="player-wrapper">
-                    <video id="video-element" controls autoplay playsinline></video>
-                    <div id="player-error" class="absolute inset-0 bg-black/90 hidden flex-col items-center justify-center p-6 text-center">
-                        <i class="fa-solid fa-triangle-exclamation text-rose-500 text-3xl mb-3"></i>
-                        <p class="text-white text-sm font-bold mb-1">Playback Failed</p>
-                        <p id="error-details" class="text-slate-400 text-xs mb-4">Stream token may have refreshed.</p>
-                        <button onclick="retryPlayback()" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition">
-                            <i class="fa-solid fa-rotate-right mr-1"></i> Try Fallback Proxy
+                <div class="w-full bg-black rounded-xl overflow-hidden shadow-2xl border border-slate-800 relative" style="aspect-ratio: 16 / 9;">
+                    <video id="video-element" controls autoplay playsinline referrerpolicy="no-referrer"></video>
+                    <div id="player-error" class="hidden absolute inset-0 items-center justify-center bg-black/90 text-center px-6 flex-col gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500 text-3xl"></i>
+                        <p class="text-slate-200 text-sm font-semibold">Stream buffering or stream token expired.</p>
+                        <button onclick="retryPlayback()" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Retry Stream
                         </button>
                     </div>
                 </div>
@@ -179,48 +179,68 @@
     </div>
 
     <script>
-        const API_FEED = "https://raw.githubusercontent.com/drmlive/sliv-live-events/main/sonyliv.json";
-        const LOCAL_API = "/api/events";
+        const FALLBACK_IMG = "https://origin-staticv2.sonyliv.com/videoasset_images/manage_file/1000023561/1788637773558485_UNL26_Georgia_vs_Northern_Ireland_live_landscape_thumb.jpg";
+        const FEEDS = [
+            "https://raw.githubusercontent.com/drmlive/sliv-live-events/main/sonyliv.json",
+            "https://cdn.jsdelivr.net/gh/drmlive/sliv-live-events@main/sonyliv.json",
+            "https://fastly.jsdelivr.net/gh/drmlive/sliv-live-events@main/sonyliv.json"
+        ];
 
         let allMatches = [];
         let currentFilter = "ALL";
         let searchQuery = "";
         let hlsInstance = null;
         let currentStreamUrl = "";
-        let isUsingProxy = false;
+        let currentContentId = "";
 
-        const FALLBACK_IMG = "https://origin-staticv2.sonyliv.com/videoasset_images/manage_file/1000024191/1789810486957132_ASIAN_GAME_2026_GOB_Landscape_Thumb.jpg";
-
-        function esc(str) {
-            if (!str) return '';
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        function esc(s) {
+            return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
         }
 
-        async function loadData() {
-            document.getElementById("loader").style.display = "flex";
-            let data = null;
-
-            // Try local express API first, then direct GitHub feed
+        async function fetchLiveFeed() {
+            // Check session cache (45s TTL)
             try {
-                const res = await fetch(LOCAL_API, { cache: "no-store" });
-                if (res.ok) data = await res.json();
-            } catch(e) {}
+                const cached = sessionStorage.getItem("sonyliv_cache");
+                const cachedTime = sessionStorage.getItem("sonyliv_time");
+                if (cached && cachedTime && (Date.now() - Number(cachedTime) < 45000)) {
+                    return JSON.parse(cached);
+                }
+            } catch (_) {}
 
-            if (!data) {
+            for (const feedUrl of FEEDS) {
                 try {
-                    const res = await fetch(API_FEED, { cache: "no-store" });
-                    if (res.ok) data = await res.json();
-                } catch(e) {}
+                    const res = await fetch(feedUrl, { cache: "no-store", referrerPolicy: "no-referrer" });
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json && (json.matches || Array.isArray(json))) {
+                            try {
+                                sessionStorage.setItem("sonyliv_cache", JSON.stringify(json));
+                                sessionStorage.setItem("sonyliv_time", String(Date.now()));
+                            } catch (_) {}
+                            return json;
+                        }
+                    }
+                } catch (_) {}
             }
+            return null;
+        }
 
+        async function loadData(force = false) {
+            if (force) {
+                sessionStorage.removeItem("sonyliv_cache");
+                sessionStorage.removeItem("sonyliv_time");
+            }
+            document.getElementById("loader").style.display = "flex";
+            const data = await fetchLiveFeed();
             document.getElementById("loader").style.display = "none";
 
-            if (!data || !data.matches) {
-                document.getElementById("loader").innerHTML = '<p class="text-rose-500 font-bold">Failed to load SonyLiv matches. Click refresh to retry.</p>';
+            if (!data) {
+                document.getElementById("loader").style.display = "flex";
+                document.getElementById("loader").innerHTML = '<p class="text-rose-500 font-bold">Failed to load matches. Click refresh to retry.</p>';
                 return;
             }
 
-            allMatches = data.matches || [];
+            allMatches = data.matches || (Array.isArray(data) ? data : []);
             const liveCount = allMatches.filter(m => m.isLive).length;
             document.getElementById("live-count").textContent = liveCount;
 
@@ -260,16 +280,22 @@
             const channel = m.broadcast_channel || 'SonyLiv';
             const lang = m.audioLanguageName || 'ENG';
             const streamUrl = m.video_url || m.pub_url || m.dai_url || '';
+            const matchJsonStr = esc(JSON.stringify(m));
 
             const badge = isLive 
                 ? '<span class="inline-flex items-center gap-1.5 text-[10px] font-black text-white bg-rose-600 px-2.5 py-0.5 rounded-full shadow"><span class="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>LIVE</span>'
                 : '<span class="inline-flex items-center text-[10px] font-bold text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-700">UPCOMING</span>';
 
             const playBtn = isLive && streamUrl
-                ? `<button class="w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white py-2 rounded-xl text-xs font-bold transition shadow-lg shadow-rose-950/30 flex items-center justify-center gap-1.5" onclick="playMatch(${JSON.stringify(m).replace(/"/g, '&quot;')})">
-                    <i class="fa-solid fa-play text-[10px]"></i> WATCH LIVE
-                   </button>`
-                : `<button class="w-full bg-slate-800/60 text-slate-500 py-2 rounded-xl text-xs font-bold cursor-not-allowed border border-slate-800" disabled>⏳ Scheduled</button>`;
+                ? `<div class="grid grid-cols-2 gap-2 mt-2">
+                    <button class="bg-rose-600 hover:bg-rose-500 text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow" onclick="playMatch(${JSON.stringify(m).replace(/"/g, '&quot;')})">
+                        <i class="fa-solid fa-play text-[10px]"></i> Play
+                    </button>
+                    <a href="player.html?id=${encodeURIComponent(m.contentId || '')}" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700">
+                        <i class="fa-solid fa-expand text-[10px]"></i> Player
+                    </a>
+                   </div>`
+                : `<button class="w-full bg-slate-800/50 text-slate-500 py-2 rounded-xl text-xs font-bold cursor-not-allowed border border-slate-800 mt-2" disabled>⏳ Scheduled</button>`;
 
             return `
                 <div class="match-card rounded-2xl overflow-hidden shadow-xl flex flex-col">
@@ -278,15 +304,13 @@
                         <div class="absolute top-3 left-3">${badge}</div>
                         <div class="absolute top-3 right-3 text-[10px] font-bold bg-black/70 text-slate-300 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10">${esc(lang)}</div>
                     </div>
-                    <div class="p-4 flex-grow flex flex-col justify-between gap-4">
+                    <div class="p-4 flex-grow flex flex-col justify-between">
                         <div>
                             <span class="text-[10px] font-bold text-amber-400 tracking-wider uppercase">${esc(category)}</span>
                             <h3 class="text-sm font-bold text-white line-clamp-2 mt-1 mb-1 leading-snug">${esc(title)}</h3>
                             <p class="text-[11px] text-slate-400 truncate"><i class="fa-solid fa-tv mr-1 text-slate-500"></i> ${esc(channel)}</p>
                         </div>
-                        <div>
-                            ${playBtn}
-                        </div>
+                        ${playBtn}
                     </div>
                 </div>
             `;
@@ -343,11 +367,11 @@
             document.body.classList.add("modal-open");
 
             currentStreamUrl = m.video_url || m.pub_url || m.dai_url || '';
-            isUsingProxy = false;
+            currentContentId = m.contentId || '';
 
             // Setup share button
             document.getElementById("btn-share").onclick = () => {
-                const shareUrl = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(m.contentId || '')}`;
+                const shareUrl = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(currentContentId)}`;
                 navigator.clipboard.writeText(shareUrl).then(() => {
                     const btn = document.getElementById("btn-share");
                     const orig = btn.innerHTML;
@@ -356,10 +380,13 @@
                 });
             };
 
+            // Setup fullpage player link
+            document.getElementById("btn-fullscreen-page").href = `player.html?id=${encodeURIComponent(currentContentId)}`;
+
             launchHls(currentStreamUrl);
         }
 
-        function launchHls(url) {
+        function launchHls(rawUrl) {
             const video = document.getElementById("video-element");
             const errDiv = document.getElementById("player-error");
 
@@ -368,14 +395,19 @@
                 hlsInstance = null;
             }
 
+            // Always proxy for Akamai cross-origin AES streams
+            const streamUrl = `/api/proxy?url=${encodeURIComponent(rawUrl)}`;
+
             if (Hls.isSupported()) {
                 hlsInstance = new Hls({
                     enableWorker: true,
                     lowLatencyMode: true,
-                    backBufferLength: 60
+                    xhrSetup: function(xhr) {
+                        xhr.withCredentials = false;
+                    }
                 });
 
-                hlsInstance.loadSource(url);
+                hlsInstance.loadSource(streamUrl);
                 hlsInstance.attachMedia(video);
 
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -384,28 +416,24 @@
 
                 hlsInstance.on(Hls.Events.ERROR, (event, data) => {
                     if (data.fatal) {
-                        console.warn("HLS Fatal Error:", data.type, data.details);
-                        if (!isUsingProxy) {
-                            // Automatically try local streaming proxy
-                            isUsingProxy = true;
-                            const proxiedUrl = `/api/proxy?url=${encodeURIComponent(currentStreamUrl)}`;
-                            console.log("Switching to proxy stream:", proxiedUrl);
-                            launchHls(proxiedUrl);
+                        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                            hlsInstance.startLoad();
+                        } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                            hlsInstance.recoverMediaError();
                         } else {
                             errDiv.classList.remove("hidden");
                         }
                     }
                 });
             } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-                video.src = url;
+                video.src = streamUrl;
                 video.addEventListener("loadedmetadata", () => video.play());
             }
         }
 
         function retryPlayback() {
             document.getElementById("player-error").classList.add("hidden");
-            const proxiedUrl = `/api/proxy?url=${encodeURIComponent(currentStreamUrl)}`;
-            launchHls(proxiedUrl);
+            launchHls(currentStreamUrl);
         }
 
         function closeModal() {
@@ -435,7 +463,7 @@
 
         // Initialize & auto-refresh every 60s
         loadData();
-        setInterval(loadData, 60000);
+        setInterval(() => loadData(false), 60000);
     </script>
 </body>
 </html>
