@@ -61,7 +61,20 @@ export async function onRequest(context) {
 
       const text = await upstreamRes.text();
       const lines = text.split('\n');
-      const baseUrl = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
+      const cleanPath = targetUrl.split('?')[0];
+      const baseUrl = cleanPath.substring(0, cleanPath.lastIndexOf('/') + 1);
+
+      function resolveUrl(rel) {
+        if (rel.startsWith('http://') || rel.startsWith('https://')) return rel;
+        if (rel.startsWith('/')) {
+          try {
+            return new URL(targetUrl).origin + rel;
+          } catch (_) {
+            return rel;
+          }
+        }
+        return baseUrl + rel;
+      }
 
       const rewrittenLines = lines.map(line => {
         const trimmed = line.trim();
@@ -70,31 +83,14 @@ export async function onRequest(context) {
         // Handle AES-128 keys and media initialization maps
         if (trimmed.startsWith('#EXT-X-KEY') || trimmed.startsWith('#EXT-X-MAP')) {
           return line.replace(/URI="([^"]+)"/g, (match, uri) => {
-            let fullKeyUrl;
-            try {
-              fullKeyUrl = (uri.startsWith('http://') || uri.startsWith('https://'))
-                ? uri
-                : new URL(uri, baseUrl).href;
-            } catch (_) {
-              fullKeyUrl = uri;
-            }
+            const fullKeyUrl = resolveUrl(uri);
             return `URI="/api/proxy?url=${encodeURIComponent(fullKeyUrl)}"`;
           });
         }
 
         if (trimmed.startsWith('#')) return line;
 
-        let fullUrl;
-        try {
-          if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-            fullUrl = trimmed;
-          } else {
-            fullUrl = new URL(trimmed, baseUrl).href;
-          }
-        } catch (_) {
-          fullUrl = trimmed;
-        }
-
+        const fullUrl = resolveUrl(trimmed);
         return `/api/proxy?url=${encodeURIComponent(fullUrl)}`;
       });
 
