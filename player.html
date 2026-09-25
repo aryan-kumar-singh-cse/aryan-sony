@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="referrer" content="no-referrer">
+    <title>SonyLiv Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100vw;
+            height: 100dvh;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        #video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .error-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            color: #fff;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .btn-retry {
+            padding: 10px 24px;
+            border-radius: 8px;
+            background: #ff2c55;
+            color: #fff;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-retry:hover { background: #e02447; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+    <video id="video-player" controls autoplay playsinline></video>
+    <div id="error-screen" class="error-screen">
+        <h3 style="font-size: 1.2rem; color: #ff2c55;">Stream Offline or Token Expired</h3>
+        <p style="color: #94a3b8; font-size: 0.85rem;">The requested live stream is not available right now.</p>
+        <button class="btn-retry" onclick="retryStream()">Retry with Proxy</button>
+    </div>
+
+    <script>
+        let hls = null;
+        let rawUrl = '';
+        let proxied = false;
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            rawUrl = params.get('url') || '';
+            const matchId = params.get('id') || '';
+
+            if (!rawUrl && matchId) {
+                try {
+                    const res = await fetch('https://raw.githubusercontent.com/drmlive/sliv-live-events/main/sonyliv.json');
+                    const data = await res.json();
+                    const match = (data.matches || []).find(m => String(m.contentId).toLowerCase() === matchId.toLowerCase());
+                    if (match) {
+                        rawUrl = match.video_url || match.pub_url || match.dai_url || '';
+                        document.title = match.match_name || 'SonyLiv Player';
+                    }
+                } catch(e) {}
+            }
+
+            if (!rawUrl) {
+                showError();
+                return;
+            }
+
+            play(rawUrl);
+        }
+
+        function play(streamUrl) {
+            const video = document.getElementById('video-player');
+            document.getElementById('error-screen').style.display = 'none';
+
+            if (hls) { hls.destroy(); hls = null; }
+
+            if (Hls.isSupported()) {
+                hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+                hls.on(Hls.Events.ERROR, (e, data) => {
+                    if (data.fatal) {
+                        if (!proxied) {
+                            proxied = true;
+                            play('/api/proxy?url=' + encodeURIComponent(rawUrl));
+                        } else {
+                            showError();
+                        }
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = streamUrl;
+                video.addEventListener('loadedmetadata', () => video.play());
+            }
+        }
+
+        function retryStream() {
+            play('/api/proxy?url=' + encodeURIComponent(rawUrl));
+        }
+
+        function showError() {
+            document.getElementById('error-screen').style.display = 'flex';
+        }
+
+        init();
+    </script>
+</body>
+</html>
