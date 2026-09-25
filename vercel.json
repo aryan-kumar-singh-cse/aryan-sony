@@ -5,6 +5,7 @@
     { "source": "/api/events", "destination": "/api/events.js" },
     { "source": "/player", "destination": "/public/player.html" },
     { "source": "/play", "destination": "/public/player.html" },
+    { "source": "/", "destination": "/public/index.html" },
     { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
