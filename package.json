@@ -1,10 +1,10 @@
 {
   "name": "aryan-sony",
   "version": "1.0.0",
-  "description": "SonyLiv Live Sports Streaming Hub & Proxy Player",
-  "main": "server.js",
+  "description": "SonyLiv Live Sports Hub",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo Build complete"
   },
   "dependencies": {
     "express": "^4.19.2",
