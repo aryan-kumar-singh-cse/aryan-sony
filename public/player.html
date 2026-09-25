@@ -189,24 +189,19 @@
             initPlayback(rawUrl);
         }
 
-        function initPlayback(streamUrl, useProxy) {
-            var finalUrl = useProxy ? ("/api/proxy?url=" + encodeURIComponent(streamUrl)) : streamUrl;
+        function initPlayback(streamUrl) {
+            var proxiedUrl = "/api/proxy?url=" + encodeURIComponent(streamUrl);
             var isNativeHls = !!video.canPlayType("application/vnd.apple.mpegurl");
 
             if (isNativeHls) {
-                video.src = finalUrl;
+                video.src = proxiedUrl;
                 video.addEventListener("loadedmetadata", function() {
                     hideLoading();
                     video.play().catch(function(){});
                 }, { once: true });
                 video.addEventListener("error", function() {
-                    if (!triedProxy) {
-                        triedProxy = true;
-                        initPlayback(rawUrl, true);
-                    } else {
-                        hideLoading();
-                        showError("Stream error. Please reload.");
-                    }
+                    hideLoading();
+                    showError("Stream error. Please reload.");
                 }, { once: true });
             } else if (window.Hls && Hls.isSupported()) {
                 if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
@@ -216,8 +211,31 @@
                     xhrSetup: function(xhr) { xhr.withCredentials = false; }
                 });
 
-                hlsInstance.loadSource(finalUrl);
+                hlsInstance.loadSource(proxiedUrl);
                 hlsInstance.attachMedia(video);
+
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                    hideLoading();
+                    video.play().catch(function(){});
+                });
+
+                hlsInstance.on(Hls.Events.ERROR, function(ev, data) {
+                    if (data.fatal) {
+                        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                            hlsInstance.startLoad();
+                        } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                            hlsInstance.recoverMediaError();
+                        } else {
+                            hideLoading();
+                            showError("Stream playback error. Reconnecting...");
+                        }
+                    }
+                });
+            } else {
+                hideLoading();
+                showError("HLS video playback is not supported in this browser.");
+            }
+        }
 
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
                     hideLoading();

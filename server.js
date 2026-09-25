@@ -83,7 +83,21 @@ app.get('/api/proxy', async (req, res) => {
         upstreamRes.on('end', () => {
           // Rewrite internal relative URLs and encryption key URIs in m3u8
           const lines = body.split('\n');
-          const baseUrl = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
+          const cleanPath = targetUrl.split('?')[0];
+          const baseUrl = cleanPath.substring(0, cleanPath.lastIndexOf('/') + 1);
+
+          function resolveUrl(rel) {
+            if (rel.startsWith('http://') || rel.startsWith('https://')) return rel;
+            if (rel.startsWith('/')) {
+              try {
+                return new URL(targetUrl).origin + rel;
+              } catch (_) {
+                return rel;
+              }
+            }
+            return baseUrl + rel;
+          }
+
           const rewritten = lines.map(line => {
             const trimmed = line.trim();
             if (!trimmed) return line;
@@ -91,21 +105,14 @@ app.get('/api/proxy', async (req, res) => {
             // Handle encryption keys and media initialization maps
             if (trimmed.startsWith('#EXT-X-KEY') || trimmed.startsWith('#EXT-X-MAP')) {
               return line.replace(/URI="([^"]+)"/g, (match, uri) => {
-                let fullKeyUrl = (uri.startsWith('http://') || uri.startsWith('https://'))
-                  ? uri
-                  : new URL(uri, baseUrl).href;
+                const fullKeyUrl = resolveUrl(uri);
                 return `URI="/api/proxy?url=${encodeURIComponent(fullKeyUrl)}"`;
               });
             }
 
             if (trimmed.startsWith('#')) return line;
 
-            let fullUrl;
-            if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-              fullUrl = trimmed;
-            } else {
-              fullUrl = new URL(trimmed, baseUrl).href;
-            }
+            const fullUrl = resolveUrl(trimmed);
             return `/api/proxy?url=${encodeURIComponent(fullUrl)}`;
           }).join('\n');
 
