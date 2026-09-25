@@ -1,13 +1,10 @@
 {
-  "version": 2,
   "regions": ["bom1"],
   "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
     { "source": "/api/proxy", "destination": "/api/proxy.js" },
     { "source": "/api/events", "destination": "/api/events.js" },
     { "source": "/player", "destination": "/player.html" },
-    { "source": "/play", "destination": "/player.html" },
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/play", "destination": "/player.html" }
   ]
 }
