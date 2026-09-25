@@ -27,16 +27,13 @@ export async function onRequest(context) {
   }
 
   try {
-    const upstreamHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Referer': 'https://www.sonyliv.com/',
-      'Origin': 'https://www.sonyliv.com',
-      'Accept': '*/*'
-    };
-
     const upstreamRes = await fetch(targetUrl, {
       method: 'GET',
-      headers: upstreamHeaders,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.9'
+      },
       redirect: 'follow'
     });
 
