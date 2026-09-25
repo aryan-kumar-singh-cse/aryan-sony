@@ -1,9 +1,15 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    { "source": "/api/proxy", "destination": "/api/proxy.js" },
-    { "source": "/api/events", "destination": "/api/events.js" },
-    { "source": "/player", "destination": "/player.html" },
-    { "source": "/play", "destination": "/player.html" }
+  "version": 2,
+  "builds": [
+    { "src": "public/**/*", "use": "@vercel/static" },
+    { "src": "api/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/proxy", "dest": "/api/proxy.js" },
+    { "src": "/api/events", "dest": "/api/events.js" },
+    { "src": "/player", "dest": "/public/player.html" },
+    { "src": "/play", "dest": "/public/player.html" },
+    { "src": "/", "dest": "/public/index.html" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
